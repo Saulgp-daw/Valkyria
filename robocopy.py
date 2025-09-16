@@ -134,7 +134,13 @@ class App(tk.Tk):
         btnPurge.grid(row=0, column=2, padx=6, pady=6)
         ToolTip(btnPurge, "Elimina archivos del destino que ya no existen en el origen: {Origen} - {Destino} /PURGE")
 
+        btnExcludeExtraMir = tk.Button(frame_restore, text="Espejo (Excluir Extra)", command=self.exclude_extra_mirror, **style)
+        btnExcludeExtraMir.grid(row=0, column=3, padx=6, pady=6)
+        ToolTip(btnExcludeExtraMir, "Excluye archivos que no están en el destino y no los borra: {Origen} - {Destino} /MIR /XX")
 
+        btnExcludeSame = tk.Button(frame_restore, text="Espejo (Excluir Cambios)", command=self.exclude_extra_mirror, **style)
+        btnExcludeSame.grid(row=0, column=4, padx=6, pady=6)
+        ToolTip(btnExcludeSame, "Excluye archivos con cambios en el destino y no los borra: {Origen} - {Destino} /MIR /XC")
 
         # --- Pestaña: Avanzado ---
         frame_avanzado = tk.Frame(notebook, bg="black")
@@ -276,7 +282,20 @@ class App(tk.Tk):
         self.validator(src, dst)
         cmd = build_cmd(src, dst, RobocopyFlags.CREATE_DIRS)
         self.run_cmd(cmd)
+
+    def exclude_extra_purge(self):
+        # Excluye archivos "extra" en destino
+        self.validator(src, dst)
+        cmd = build_cmd(src, dst, RobocopyFlags.PURGE, RobocopyFlags.EXCLUDE_EXTRA)
+        self.run_cmd(cmd)
+
+    def exclude_extra_mirror(self):
+        # Excluye archivos "extra" en destino (ESPEJO)
+        self.validator(src, dst)
+        cmd = build_cmd(src, dst, RobocopyFlags.MIRROR, RobocopyFlags.EXCLUDE_EXTRA)
+        self.run_cmd(cmd)
     
+
 
 
 if __name__ == "__main__":
