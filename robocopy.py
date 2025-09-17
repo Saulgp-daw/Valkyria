@@ -132,11 +132,11 @@ class App(tk.Tk):
         frame_restore = tk.Frame(notebook, bg="black")
         notebook.add(frame_restore, text="Espejo")
 
-        btnMirror = tk.Button(frame_restore, text="Espejo", command=self.copia_mirror, **style)
+        btnMirror = tk.Button(frame_restore, text="Simple", command=self.copia_mirror, **style)
         btnMirror.grid(row=0, column=0, padx=6, pady=6)
         ToolTip(btnMirror, "Copia espejo (borra en destino lo que no existe en origen): {Origen} - {Destino} /MIR")
 
-        btnExcludeExtraMir = tk.Button(frame_restore, text="Espejo (Excluir Extra)", command=self.exclude_extra_mirror, **style)
+        btnExcludeExtraMir = tk.Button(frame_restore, text="Excluir Extra", command=self.exclude_extra_mirror, **style)
         btnExcludeExtraMir.grid(row=0, column=1, padx=6, pady=6)
         ToolTip(btnExcludeExtraMir, "Excluye archivos que no están en el destino y no los borra: {Origen} - {Destino} /MIR /XX")
 
