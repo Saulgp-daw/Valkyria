@@ -1,6 +1,8 @@
 import os, sys, threading, subprocess, shutil, tempfile
 import tkinter as tk
 from tkinter import filedialog, simpledialog, messagebox, ttk
+from datetime import datetime
+from pathlib import Path
 from tkinter.scrolledtext import ScrolledText
 from cryptography.fernet import Fernet
 from comandos import RobocopyFlags
@@ -97,11 +99,11 @@ class App(tk.Tk):
         btnSimple.grid(row=0, column=0, padx=6, pady=6) 
         ToolTip(btnSimple, "Copia simple de directorios: {Origen} - {Destino}")
 
-        btnSubdirectory = tk.Button(frame_copias, text="Subdirectorios (salvo vacíos)", command=self.subdirectory_copy, **style)
+        btnSubdirectory = tk.Button(frame_copias, text="Subdir (salvo vacíos)", command=self.subdirectory_copy, **style)
         btnSubdirectory.grid(row=0, column=1, padx=6, pady=6) 
         ToolTip(btnSubdirectory, "Copia de subdirectorios salvo los vacíos: {Origen} - {Destino} /S")
 
-        btnSubdirectoryIncl = tk.Button(frame_copias, text="Subdirectorios (incluído vacíos)", command=self.subdirectory_copy, **style)
+        btnSubdirectoryIncl = tk.Button(frame_copias, text="Subdir (incluído vacíos)", command=self.subdirectory_copy, **style)
         btnSubdirectoryIncl.grid(row=0, column=2, padx=6, pady=6) 
         ToolTip(btnSubdirectoryIncl, "Copia de subdirectorios salvo los vacíos: {Origen} - {Destino} /E")
 
@@ -109,45 +111,54 @@ class App(tk.Tk):
         btnIncrementalNoPurge.grid(row=0, column=3, padx=6, pady=6)
         ToolTip(btnIncrementalNoPurge, "Copia incremental sin borrar archivos: {Origen} - {Destino} /E /XO")
 
-        btnMirror = tk.Button(frame_copias, text="Espejo", command=self.copia_mirror, **style)
-        btnMirror.grid(row=1, column=0, padx=6, pady=6)
-        ToolTip(btnMirror, "Copia espejo (borra en destino lo que no existe en origen): {Origen} - {Destino} /MIR")
-
         btnSinceDate = tk.Button(frame_copias, text="A partir de fecha", command=self.copia_recientes, **style)
         btnSinceDate.grid(row=1, column=1, padx=6, pady=6)
         ToolTip(btnSinceDate, "Copia a partir de una cantidad de días: {Origen} - {Destino} /E  /MAXAGE:{días}")
 
+        btnCopyAllExcludeSame = tk.Button(frame_copias, text="Subdir (Excluir Cambios)", command=self.exclude_extra_copy, **style)
+        btnCopyAllExcludeSame.grid(row=1, column=2, padx=6, pady=6)
+        ToolTip(btnCopyAllExcludeSame, "Copia todo y excluye archivos modificados entre ambos: {Origen} - {Destino} /E /XC")
+
         btnCreateStructure = tk.Button(frame_copias, text="Crear estructura", command=self.create_structure, **style)
-        btnCreateStructure.grid(row=1, column=2, padx=6, pady=6)
+        btnCreateStructure.grid(row=1, column=3, padx=6, pady=6)
         ToolTip(btnCreateStructure, "Copia simplemente la estructura de carpetas: {Origen} - {Destino} /CREATE")
+
+        btnCreateStructure = tk.Button(frame_copias, text="Subdir (Excluir antiguos y extra)", command=self.create_structure, **style)
+        btnCreateStructure.grid(row=1, column=0, padx=6, pady=6)
+        ToolTip(btnCreateStructure, "Copia hasta subdirectorios, salvo antiguos y extras: {Origen} - {Destino} /E /XO /XX")
         
 
-        # --- Pestaña: Restaurar ---
+        # --- Pestaña: Espejo ---
         frame_restore = tk.Frame(notebook, bg="black")
-        notebook.add(frame_restore, text="Restaurar")
+        notebook.add(frame_restore, text="Espejo")
 
-        btnIncrementalNoPurge = tk.Button(frame_restore, text="Restaurar", command=self.copia_incremental, **style)
-        btnIncrementalNoPurge.grid(row=0, column=1, padx=6, pady=6)
-        ToolTip(btnIncrementalNoPurge, "Copia incremental sin borrar archivos: {Origen} - {Destino} /E /XO")
-
-        btnPurge = tk.Button(frame_restore, text="Purgar", command=self.purge_destination, **style)
-        btnPurge.grid(row=0, column=2, padx=6, pady=6)
-        ToolTip(btnPurge, "Elimina archivos del destino que ya no existen en el origen: {Origen} - {Destino} /PURGE")
+        btnMirror = tk.Button(frame_restore, text="Espejo", command=self.copia_mirror, **style)
+        btnMirror.grid(row=0, column=0, padx=6, pady=6)
+        ToolTip(btnMirror, "Copia espejo (borra en destino lo que no existe en origen): {Origen} - {Destino} /MIR")
 
         btnExcludeExtraMir = tk.Button(frame_restore, text="Espejo (Excluir Extra)", command=self.exclude_extra_mirror, **style)
-        btnExcludeExtraMir.grid(row=0, column=3, padx=6, pady=6)
+        btnExcludeExtraMir.grid(row=0, column=1, padx=6, pady=6)
         ToolTip(btnExcludeExtraMir, "Excluye archivos que no están en el destino y no los borra: {Origen} - {Destino} /MIR /XX")
 
-        btnExcludeSame = tk.Button(frame_restore, text="Espejo (Excluir Cambios)", command=self.exclude_extra_mirror, **style)
-        btnExcludeSame.grid(row=0, column=4, padx=6, pady=6)
-        ToolTip(btnExcludeSame, "Excluye archivos con cambios en el destino y no los borra: {Origen} - {Destino} /MIR /XC")
+        btnMirrorLog = tk.Button(frame_restore, text="Con Registro", command=self.log_mirror, **style)
+        btnMirrorLog.grid(row=0, column=2, padx=6, pady=6)
+        ToolTip(btnMirrorLog, "Espejo con un log de registro (guardado en C:\Logs\): {Origen} - {Destino} /MIR /LOG")
+
+        btnMirrorRetryWait = tk.Button(frame_restore, text="Reintento y Espera", command=self.retry_wait_mirror, **style)
+        btnMirrorRetryWait.grid(row=0, column=3, padx=6, pady=6)
+        ToolTip(btnMirrorRetryWait, "Espejo con reintentos y tiempo de espera: {Origen} - {Destino} /MIR /R:n /W:n")
+
+        btnMirrorMultiThread = tk.Button(frame_restore, text="Multihilo", command=self.multithread_mirror, **style)
+        btnMirrorMultiThread.grid(row=1, column=0, padx=6, pady=6)
+        ToolTip(btnMirrorMultiThread, "Espejo con N cantidad de hilos (máx. tu total): {Origen} - {Destino} /MIR /MT:n")
 
         # --- Pestaña: Avanzado ---
         frame_avanzado = tk.Frame(notebook, bg="black")
         notebook.add(frame_avanzado, text="Avanzado")
 
-        tk.Button(frame_avanzado, text="Purgar", command=self.purge_destination, **style).grid(row=0, column=0, padx=6, pady=6)
-        tk.Button(frame_avanzado, text="Otro", command=self.purge_destination, **style).grid(row=0, column=1, padx=6, pady=6)
+        btnPurge = tk.Button(frame_avanzado, text="Purgar", command=self.purge_destination, **style)
+        btnPurge.grid(row=1, column=3, padx=6, pady=6)
+        ToolTip(btnPurge, "Elimina archivos del destino que ya no existen en el origen: {Origen} - {Destino} /PURGE")
 
         # --- Pestaña: Salir ---
         frame_salir = tk.Frame(notebook, bg="black")
@@ -211,12 +222,7 @@ class App(tk.Tk):
             "Esto BORRARÁ en destino lo que no exista en origen.\n\n¿Continuar?"
         )
 
-    def copia_mirror(self):
-        src, dst = self.ask_src_dst()
-        if not src or not dst: return
-        if not self.confirm_mirror(src, dst): return
-        cmd = build_cmd(src, dst, "/MIR")
-        self.run_cmd(cmd)
+    
 
     def copia_incremental(self):
         src, dst = self.ask_src_dst()
@@ -267,35 +273,148 @@ class App(tk.Tk):
         
     def subdirectory_copy(self):
         # Hace una copia de archivos incluyendo subdirectorios pero no los vacíos
+        src, dst = self.ask_src_dst()
         self.validator(src, dst)
         cmd = build_cmd(src, dst, RobocopyFlags.COPY_SUBDIRS_NEMPTY)
         self.run_cmd(cmd)
     
     def subdirectory_copy_included(self):
         # Hace una copia de archivos incluyendo subdirectorios vacíos
+        src, dst = self.ask_src_dst()
         self.validator(src, dst)
         cmd = build_cmd(src, dst, RobocopyFlags.COPY_SUBDIRS)
         self.run_cmd(cmd)
     
     def create_structure(self):
         # Crea estructura de carpetas y archivos vacíos (sin contenido)
+        src, dst = self.ask_src_dst()
         self.validator(src, dst)
         cmd = build_cmd(src, dst, RobocopyFlags.CREATE_DIRS)
         self.run_cmd(cmd)
 
     def exclude_extra_purge(self):
         # Excluye archivos "extra" en destino
+        src, dst = self.ask_src_dst()
         self.validator(src, dst)
         cmd = build_cmd(src, dst, RobocopyFlags.PURGE, RobocopyFlags.EXCLUDE_EXTRA)
         self.run_cmd(cmd)
 
+    
+
+    def exclude_extra_copy(self):
+        # Excluye archivos "extra" en destino (Copia completa con subdirectorios)
+        src, dst = self.ask_src_dst()
+        self.validator(src, dst)
+        cmd = build_cmd(src, dst, RobocopyFlags.COPY_SUBDIRS, RobocopyFlags.EXCLUDE_CHANGED)
+        self.run_cmd(cmd)
+
+    def exclude_origin_older_copy(self):
+        # Excluye archivos del origen si son más antiguos que en el destino (Copia completa con subdirectorios)
+        src, dst = self.ask_src_dst()
+        self.validator(src, dst)
+        cmd = build_cmd(src, dst, RobocopyFlags.COPY_SUBDIRS, RobocopyFlags.EXCLUDE_OLDER)
+        self.run_cmd(cmd)
+
+    def exclude_older_extra_copy(self):
+        # Excluye archivos del origen si son más antiguos y extra que en el destino (Copia completa con subdirectorios)
+        src, dst = self.ask_src_dst()
+        self.validator(src, dst)
+        cmd = build_cmd(src, dst, RobocopyFlags.COPY_SUBDIRS, RobocopyFlags.EXCLUDE_OLDER, RobocopyFlags.EXCLUDE_EXTRA)
+        self.run_cmd(cmd)
+    
+    def exclude_newer_copy(self):
+        # Excluye archivos del origen si son más nuevos que en el destino (Copia completa con subdirectorios)
+        src, dst = self.ask_src_dst()
+        self.validator(src, dst)
+        cmd = build_cmd(src, dst, RobocopyFlags.COPY_SUBDIRS, RobocopyFlags.EXCLUDE_NEWER)
+        self.run_cmd(cmd)
+
+    ################## ESPEJO #################
+    def copia_mirror(self):
+        src, dst = self.ask_src_dst()
+        if not src or not dst: return
+        if not self.confirm_mirror(src, dst): return
+        cmd = build_cmd(src, dst, "/MIR")
+        self.run_cmd(cmd)
+    
     def exclude_extra_mirror(self):
         # Excluye archivos "extra" en destino (ESPEJO)
+        src, dst = self.ask_src_dst()
         self.validator(src, dst)
         cmd = build_cmd(src, dst, RobocopyFlags.MIRROR, RobocopyFlags.EXCLUDE_EXTRA)
         self.run_cmd(cmd)
-    
 
+    def exclude_older_mirror(self):
+        # Excluye archivos del origen si son más antiguos que en el destino (Espejo)
+        src, dst = self.ask_src_dst()
+        self.validator(src, dst)
+        cmd = build_cmd(src, dst, RobocopyFlags.MIRROR, RobocopyFlags.EXCLUDE_OLDER)
+        self.run_cmd(cmd)
+
+    def log_mirror(self):
+        # Crea un Espejo con un log
+        src, dst = self.ask_src_dst()
+        self.validator(src, dst)
+         # Crear carpeta Logs si no existe
+        log_dir = Path("C:/Logs")
+        log_dir.mkdir(parents=True, exist_ok=True)
+        fecha_hora = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        log_file = Path("C:/Logs") / f"backup_{fecha_hora}.txt"
+        log_flag = f'{RobocopyFlags.LOG}{log_file}'
+        cmd = build_cmd(src, dst, RobocopyFlags.MIRROR, log_flag)
+        self.run_cmd(cmd)
+    
+    def retry_wait_mirror(self):
+        # Reintenta y Espera (Espejo)
+        src, dst = self.ask_src_dst()
+        self.validator(src, dst)
+        retries = self.ask_prompt()
+        wait_secs = self.ask_prompt("Tiempo de Espera", "¿Cuánto tiempo esperamos?")
+
+        if retries is None:
+            print("Operación cancelada por el usuario.")
+            return 
+        if wait_secs is None:
+            print("Operación cancelada por el usuario.")
+            return 
+        r_flag = f"/R:{retries}"
+        w_flag = f"/W:{wait_secs}"
+
+        cmd = build_cmd(src, dst, RobocopyFlags.MIRROR, r_flag, w_flag)
+        self.run_cmd(cmd)
+
+    def restartable_mirror(self):
+        # Copia archivos en modo reiniciable (Espejo)
+        src, dst = self.ask_src_dst()
+        self.validator(src, dst)
+        cmd = build_cmd(src, dst, RobocopyFlags.MIRROR, RobocopyFlags.RESTARTABLE)
+        self.run_cmd(cmd)
+    
+    def multithread_mirror(self):
+        # Lo hace con multihilo para agilizar el proceso (Espejo)
+        src, dst = self.ask_src_dst()
+        self.validator(src, dst)
+        
+        max_threads = os.cpu_count() or 1
+        threads = self.ask_prompt("Funcionalidad Multihilo", f"¿Cuántos hilos usamos? (Máximo permitido: {max_threads}", 1, 1, max_threads)
+
+        if threads is None:
+            print("Operación cancelada por el usuario.")
+            return 
+        thr_flag = f"/MT:{threads}"
+
+        cmd = build_cmd(src, dst, RobocopyFlags.MIRROR, thr_flag)
+        self.run_cmd(cmd)
+
+
+    def ask_prompt(self, title="Reintentos", prompt="¿Cuántos reintentos?", initial_value=1, min_value=1, max_value=1):
+        while True:
+            valor = simpledialog.askinteger(title, prompt, minvalue=min_value, maxvalue=max_value, initialvalue=initial_value, parent=self)
+            if valor is None:
+                if messagebox.askyesno("Confirmar", "¿Cancelar configuración?"):
+                    return None  # o valor por defecto
+            else:
+                return valor
 
 
 if __name__ == "__main__":

@@ -18,10 +18,10 @@ class RobocopyFlags:
 
     PURGE = "/PURGE"                    # Elimina archivos del destino que ya no existen en el origen
     EXCLUDE_EXTRA = "/XX"               # Excluye archivos "extra" en destino
-    EXCLUDE_SAME = "/XC"                # Excluye archivos sin cambios
-    EXCLUDE_CHANGED = "/X"              # Excluye archivos modificados
+    EXCLUDE_CHANGED = "/XC"             # Excluye archivos que han cambiado (diferente tamaño, misma fecha)
     EXCLUDE_NEWER = "/XN"               # Excluye archivos más nuevos en origen
     EXCLUDE_OLDER = "/XO"               # Excluye archivos más antiguos en origen
+    RESTARTABLE = "/Z"                  # Modo reiniciable en caso de error
 
     # ============================================
     # FILTROS / EXCLUSIONES
