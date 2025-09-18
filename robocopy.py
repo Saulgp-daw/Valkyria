@@ -86,7 +86,7 @@ class App(tk.Tk):
         # Crear pestañas (notebook)
         notebook = ttk.Notebook(self)
         notebook.pack(padx=10, pady=10, fill="x")
-
+ 
         # Estilo común para botones
         style = estilo_botones_tk()
         
@@ -157,8 +157,12 @@ class App(tk.Tk):
         notebook.add(frame_avanzado, text="Avanzado")
 
         btnPurge = tk.Button(frame_avanzado, text="Purgar", command=self.purge_destination, **style)
-        btnPurge.grid(row=1, column=3, padx=6, pady=6)
+        btnPurge.grid(row=0, column=0, padx=6, pady=6)
         ToolTip(btnPurge, "Elimina archivos del destino que ya no existen en el origen: {Origen} - {Destino} /PURGE")
+
+        btnCompare = tk.Button(frame_avanzado, text="Listar y Comparar", command=self.compare_files, **style)
+        btnCompare.grid(row=0, column=1, padx=6, pady=6)
+        ToolTip(btnCompare, "Compara diferencias entre archivos: {Origen} - {Destino} /L /V")
 
         # --- Pestaña: Salir ---
         frame_salir = tk.Frame(notebook, bg="black")
@@ -182,7 +186,7 @@ class App(tk.Tk):
     def ask_src_dst(self, title_src="Selecciona carpeta de ORIGEN", title_dst="Selecciona carpeta de DESTINO"):
         src = filedialog.askdirectory(title=title_src)
         if not src: return None, None
-        dst = filedialog.askdirectory(title=title_dst)
+        dst = filedialog.askdirectory(title=title_dst)  
         if not dst: return None, None
         return src, dst
     
@@ -192,7 +196,7 @@ class App(tk.Tk):
             print("Error: ruta de origen o destino vacía")
             return
         #Validamos que el origen exista dentro del sistema de archivos y no sea una ruta falsa (el destino se crea si no existe)
-        if not os.path.exists(src):
+        if not os.path.exists(src): 
             print(f"Error: el directorio origen no existe: {src}")
             return
         
@@ -406,6 +410,12 @@ class App(tk.Tk):
         cmd = build_cmd(src, dst, RobocopyFlags.MIRROR, thr_flag)
         self.run_cmd(cmd)
 
+    def compare_files(self):
+        # Mostramos por consola los cambios y comparaciones de archivos entre origen y destino
+        src, dst = self.ask_src_dst()
+        self.validator(src, dst)
+        cmd = build_cmd(src, dst, RobocopyFlags.LIST_ONLY, RobocopyFlags.VERBOSE)
+        self.run_cmd(cmd)
 
     def ask_prompt(self, title="Reintentos", prompt="¿Cuántos reintentos?", initial_value=1, min_value=1, max_value=1):
         while True:
@@ -419,4 +429,4 @@ class App(tk.Tk):
 
 if __name__ == "__main__":
     app = App()
-    app.mainloop()
+    app.mainloop() 

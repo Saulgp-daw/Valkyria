@@ -59,6 +59,7 @@ class RobocopyFlags:
     # ============================================
 
     LIST_ONLY = "/L"                   # Simula (no copia), solo muestra lo que haría
+    VERBOSE = "/V"                     # Salida detallada, mostrando copiados, eliminados o actualizados
 
     # ============================================
     # ENLACES / ATRIBUTOS ESPECIALES
